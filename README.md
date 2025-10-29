@@ -25,7 +25,7 @@ f1-championship-prediction/
 ├── README.md                   # This file
 │
 ├── data/                       # Generated data files
-│   ├── f1_historical_data_2018_2024.csv
+│   ├── f1_historical_data_2018_2025.csv
 │   ├── f1_engineered_features.csv
 │   └── label_encoders.pkl
 │
@@ -42,12 +42,12 @@ f1-championship-prediction/
 
 ### Step 1: Collect Historical Data
 
-Collect F1 race data from 2018-2024 (takes 15-30 minutes):
+Collect F1 race data from 2018-2025 (takes 15-30 minutes):
 ```bash
 python data_collection.py
 ```
 
-**Output**: `f1_historical_data_2018_2024.csv` (~150 races, ~3000 driver records)
+**Output**: `f1_historical_data_2018_2024.csv` (~150+ races, ~3000 driver records)
 
 ### Step 2: Engineer Features
 
@@ -131,9 +131,9 @@ Performance by position group:
 3. Max Verstappen - 321 pts (Red Bull) 
 
 ### Remaining Races
-- **Round 21**: Brazilian GP (Nov 2)
+- **Round 21**: Brazilian GP (Nov 2) **Sprint**
 - **Round 22**: Las Vegas GP (Nov 23)
-- **Round 23**: Qatar GP (Nov 30)
+- **Round 23**: Qatar GP (Nov 30) **Sprint**
 - **Round 24**: Abu Dhabi GP (Dec 7)
 
 ### Championship Win Probability
