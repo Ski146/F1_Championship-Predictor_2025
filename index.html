@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>F1 2025 Championship Predictor</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700;900&display=swap');
+    
+    body {
+      margin: 0;
+      font-family: 'Titillium Web', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #15151E;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    * {
+      font-family: 'Titillium Web', sans-serif;
+      -webkit-tap-highlight-color: rgba(225, 6, 0, 0.2);
+    }
+
+    .f1-red { background-color: #E10600; }
+    .f1-red-text { color: #E10600; }
+    .f1-dark { background-color: #15151E; }
+    .f1-gray { background-color: #38383F; }
+    
+    .hero-gradient {
+      background: linear-gradient(135deg, #E10600 0%, #950000 100%);
+    }
+
+    .text-f1-red { color: #E10600; }
+    .border-f1-red { border-color: #E10600; }
+    
+    /* Tab transition animations */
+    .tab-content-enter {
+      animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Card stagger animation */
+    .card-stagger {
+      animation: cardEnter 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes cardEnter {
+      from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .card-stagger-1 { animation-delay: 0.1s; }
+    .card-stagger-2 { animation-delay: 0.2s; }
+    .card-stagger-3 { animation-delay: 0.3s; }
+    .card-stagger-4 { animation-delay: 0.4s; }
+    .card-stagger-5 { animation-delay: 0.5s; }
+    
+    .standing-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-left: 4px solid transparent;
+    }
+    
+    @media (hover: hover) {
+      .standing-card:hover {
+        background-color: #38383F !important;
+        border-left-color: #E10600;
+        transform: translateX(8px);
+      }
+    }
+
+    .standing-card:active {
+      background-color: #38383F !important;
+      border-left-color: #E10600;
+      transform: scale(0.98);
+    }
+
+    .tab-button {
+      position: relative;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-button::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #E10600;
+      transform: scaleX(0);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .tab-button.active::after {
+      transform: scaleX(1);
+    }
+
+    .tab-button:active {
+      transform: scale(0.97);
+    }
+
+    .position-badge {
+      background: linear-gradient(135deg, #E10600 0%, #950000 100%);
+      font-weight: 900;
+      flex-shrink: 0;
+    }
+
+    .champion-card {
+      background: linear-gradient(135deg, #E10600 0%, #950000 100%);
+      border: 2px solid #FFD700;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .champion-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+      animation: shine 3s infinite;
+    }
+
+    @keyframes shine {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    /* Podium styles */
+    .podium-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 1rem;
+      margin: 2rem 0 3rem 0;
+      min-height: 450px;
+      padding-bottom: 2rem;
+    }
+
+    .podium-position {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .podium-position:hover {
+      transform: translateY(-10px);
+    }
+
+    .podium-1 {
+      order: 2;
+      width: 280px;
+    }
+
+    .podium-2 {
+      order: 1;
+      width: 240px;
+    }
+
+    .podium-3 {
+      order: 3;
+      width: 240px;
+    }
+
+    .podium-base {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .podium-platform {
+      width: 100%;
+      background: linear-gradient(135deg, #E10600 0%, #950000 100%);
+      position: relative;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+
+    .podium-1 .podium-platform { height: 480px; }
+    .podium-2 .podium-platform { height: 420px; background: linear-gradient(135deg, #C0C0C0 0%, #8C8C8C 100%); }
+    .podium-3 .podium-platform { height: 410px; background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); }
+
+    .podium-driver-img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    .podium-1 .podium-driver-img {
+      width: 140px;
+      height: 140px;
+      border: 5px solid #FFD700;
+    }
+
+    @media (max-width: 768px) {
+      .podium-container {
+        min-height: 300px;
+        gap: 0.5rem;
+        margin: 1.5rem 0 2rem 0;
+        padding-bottom: 1.5rem;
+      }
+      
+      .podium-1, .podium-2, .podium-3 {
+        width: 30%;
+        min-width: 100px;
+      }
+
+      .podium-driver-img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .podium-1 .podium-driver-img {
+        width: 80px;
+        height: 80px;
+      }
+
+      .podium-1 .podium-platform { height: 160px; }
+      .podium-2 .podium-platform { height: 120px; }
+      .podium-3 .podium-platform { height: 95px; }
+    }
+
+    .race-card {
+      background: #38383F;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    @media (hover: hover) {
+      .race-card:hover {
+        background: #494952;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(225, 6, 0, 0.3);
+      }
+    }
+
+    .race-card:active {
+      transform: scale(0.98);
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, #E10600 0%, #FF6B00 100%);
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-badge {
+      background: rgba(225, 6, 0, 0.15);
+      border: 1px solid rgba(225, 6, 0, 0.3);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @media (hover: hover) {
+      .stat-badge:hover {
+        background: rgba(225, 6, 0, 0.25);
+        transform: translateY(-2px);
+      }
+    }
+
+    /* Mobile-specific optimizations */
+    @media (max-width: 640px) {
+      .hero-gradient {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+      }
+
+      .standing-card,
+      .race-card {
+        padding: 1rem !important;
+      }
+
+      .champion-card {
+        padding: 1rem !important;
+      }
+
+      .tab-button {
+        min-height: 44px;
+      }
+
+      .driver-name {
+        font-size: 1rem !important;
+      }
+
+      .points-display {
+        font-size: 1.5rem !important;
+      }
+
+      .tab-button,
+      .standing-card,
+      .race-card {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    @media (max-width: 768px) {
+      .stat-badge {
+        margin-bottom: 0.5rem;
+      }
+    }
+
+    /* Fade in animation */
+    .fade-in {
+      animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const ChevronDown = () => <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" /></svg>;
+    const ChevronUp = () => <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" /></svg>;
+    const Trophy = ({ className }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>;
+    const TrendingUp = ({ className }) => <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>;
+
+    const F1App = () => {
+      const [activeTab, setActiveTab] = useState('predictions');
+      const [showMC, setShowMC] = useState(false);
+      const [expandedRace, setExpandedRace] = useState(null);
+      const [isMobile, setIsMobile] = useState(false);
+      const [tabKey, setTabKey] = useState(0);
+
+      useEffect(() => {
+        const checkMobile = () => {
+          setIsMobile(window.innerWidth < 768);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+      }, []);
+
+      const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setTabKey(prev => prev + 1);
+      };
+
+      const driverPhotos = {
+        'L. Norris': 'https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/058298d6edef4f7ba7a2f9594d838a00',
+        'O. Piastri': 'https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/165ccb28f0bf4a42951d1956649ae0d3',
+        'M. Verstappen': 'https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/0818790886a94c20ad9031379acf591b',
+        'G. Russell': 'https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/158d93aef49a43bc872e4ab75a1d862c',
+        'C. Leclerc': 'https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/bd956eb0088f416299765e9b54c2e7da.png'
+      };
+
+      const current = [
+        { pos: 1, driver: 'L. Norris', team: 'McLaren', points: 357, wins: 6, podiums: 16, flag: '🇬🇧' },
+        { pos: 2, driver: 'O. Piastri', team: 'McLaren', points: 356, wins: 7, podiums: 14, flag: '🇦🇺' },
+        { pos: 3, driver: 'M. Verstappen', team: 'Red Bull', points: 321, wins: 5, podiums: 11, flag: '🇳🇱' },
+        { pos: 4, driver: 'G. Russell', team: 'Mercedes', points: 258, wins: 2, podiums: 8, flag: '🇬🇧' },
+        { pos: 5, driver: 'C. Leclerc', team: 'Ferrari', points: 210, wins: 0, podiums: 7, flag: '🇲🇨' },
+      ];
+
+      const predicted = [
+        { pos: 1, driver: 'L. Norris', team: 'McLaren', current: 357, final: 473, gain: 116, flag: '🇬🇧' },
+        { pos: 2, driver: 'O. Piastri', team: 'McLaren', current: 356, final: 442, gain: 86, flag: '🇦🇺' },
+        { pos: 3, driver: 'M. Verstappen', team: 'Red Bull', current: 321, final: 383, gain: 62, flag: '🇳🇱' },
+        { pos: 4, driver: 'G. Russell', team: 'Mercedes', current: 258, final: 297, gain: 39, flag: '🇬🇧' },
+        { pos: 5, driver: 'C. Leclerc', team: 'Ferrari', current: 210, final: 273, gain: 63, flag: '🇲🇨' },
+      ];
+
+      const races = [
+        {
+          round: 21, name: 'Brazilian GP', date: 'Nov 7-9', circuit: '🇧🇷 Interlagos, São Paulo', sprint: true,
+          pred: [{ pos: 1, driver: 'L. Norris', pts: 33 }, { pos: 2, driver: 'O. Piastri', pts: 25 }, { pos: 3, driver: 'M. Verstappen', pts: 21 }]
+        },
+        {
+          round: 22, name: 'Las Vegas GP', date: 'Nov 20-22', circuit: '🇺🇸 Las Vegas Street', sprint: false,
+          pred: [{ pos: 1, driver: 'L. Norris', pts: 25 }, { pos: 2, driver: 'O. Piastri', pts: 18 }, { pos: 3, driver: 'M. Verstappen', pts: 15 }]
+        },
+        {
+          round: 23, name: 'Qatar GP', date: 'Nov 30', circuit: '🇶🇦 Lusail Circuit', sprint: true,
+          pred: [{ pos: 1, driver: 'L. Norris', pts: 33 }, { pos: 2, driver: 'O. Piastri', pts: 25 }, { pos: 3, driver: 'M. Verstappen', pts: 21 }]
+        },
+        {
+          round: 24, name: 'Abu Dhabi GP', date: 'Dec 7', circuit: '🇦🇪 Yas Marina', sprint: false,
+          pred: [{ pos: 1, driver: 'L. Norris', pts: 25 }, { pos: 2, driver: 'O. Piastri', pts: 18 }, { pos: 3, driver: 'M. Verstappen', pts: 15 }]
+        },
+      ];
+
+      const mc = [
+        { driver: 'L. Norris', prob: 68, color: 'bg-red-600' },
+        { driver: 'O. Piastri', prob: 28, color: 'bg-red-500' },
+        { driver: 'M. Verstappen', prob: 4, color: 'bg-blue-600' },
+      ];
+
+      const medal = (p) => p === 1 ? '🥇' : p === 2 ? '🥈' : p === 3 ? '🥉' : '';
+
+      const Podium = ({ data, type }) => {
+        const top3 = data.slice(0, 3);
+        
+        return (
+          <div className="podium-container">
+            {top3.map((d, idx) => (
+              <div key={d.pos} className={`podium-position podium-${d.pos} card-stagger card-stagger-${idx + 1}`}>
+                <div className="podium-base">
+                  <div className="podium-platform">
+                    <img 
+                      src={driverPhotos[d.driver]} 
+                      alt={d.driver}
+                      className="podium-driver-img"
+                    />
+                    <div className="text-center">
+                      <div className="text-4xl mb-2">{medal(d.pos)}</div>
+                      <div className="text-2xl md:text-3xl font-black text-white uppercase mb-1">{d.driver}</div>
+                      <div className="text-sm md:text-base text-white font-semibold mb-2">{d.team}</div>
+                      <div className="text-3xl md:text-4xl font-black text-white">
+                        {type === 'current' ? d.points : d.final}
+                      </div>
+                      {type === 'predicted' && (
+                        <div className="text-sm md:text-base text-green-300 font-bold">+{d.gain} PTS</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      };
+
+      return (
+        <div className="min-h-screen" style={{ background: '#15151E' }}>
+          {/* Hero Header */}
+          <div className="hero-gradient">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12 md:py-16">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6 fade-in">
+                  <img 
+                    src="https://public.youware.com/users-website-assets/prod/20cec118-e13c-427b-a137-7dbf3b1aedec/8c4661b1dcbf4df99deb583d3a6fd9ac.png"
+                    alt="F1 Logo"
+                    className="h-10 sm:h-12 md:h-16 w-auto"
+                  />
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white tracking-tight uppercase leading-tight mb-3 sm:mb-4 fade-in">
+                  2025 Championship
+                </h1>
+                <p className="text-lg sm:text-xl md:text-2xl text-white font-semibold mb-3 sm:mb-4 fade-in">ML-Powered Predictions</p>
+                <div className="inline-flex flex-wrap gap-2 sm:gap-3 justify-center fade-in">
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded">
+                    <span className="text-white font-bold text-xs sm:text-sm md:text-base">POST MEXICAN GP</span>
+                  </div>
+                  <div className="bg-white bg-opacity-20 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded">
+                    <span className="text-white font-bold text-xs sm:text-sm md:text-base">4 RACES • 138 PTS</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="border-b border-gray-800 sticky top-0 z-10 bg-gray-900">
+            <div className="max-w-7xl mx-auto px-2 sm:px-4">
+              <div className="flex gap-0">
+                {['predictions', 'current', 'races'].map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => handleTabChange(tab)}
+                    className={`tab-button flex-1 py-3 sm:py-4 px-2 sm:px-4 md:px-6 font-bold text-xs sm:text-sm md:text-base uppercase tracking-wide ${
+                      activeTab === tab ? 'active text-white' : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    {isMobile ? (
+                      tab === 'predictions' ? '🏆' : tab === 'current' ? '📊' : '🏁'
+                    ) : (
+                      tab === 'predictions' ? '🏆 Predictions' : tab === 'current' ? '📊 Standings' : '🏁 Races'
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Content Area */}
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+            <div key={tabKey} className="tab-content-enter">
+              {activeTab === 'current' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="fade-in">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase mb-1 sm:mb-2">Current Standings</h2>
+                    <p className="text-gray-400 text-base sm:text-lg">After Round 20 - Mexican GP</p>
+                  </div>
+                  
+                  {/* Podium for top 3 */}
+                  <Podium data={current} type="current" />
+
+                  {/* Remaining drivers */}
+                  <div className="space-y-2 sm:space-y-3 mt-8">
+                    {current.slice(3).map((d, idx) => (
+                      <div key={d.pos} className={`standing-card bg-gray-800 rounded-lg p-3 sm:p-4 md:p-6 card-stagger-${idx + 4}`}>
+                        <div className="flex items-center gap-2 sm:gap-3 md:gap-6">
+                          <div className="position-badge text-white text-lg sm:text-xl md:text-2xl font-black w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded flex items-center justify-center">
+                            {d.pos}
+                          </div>
+                          <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">{d.flag}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="driver-name font-black text-base sm:text-lg md:text-2xl text-white uppercase truncate">{d.driver}</div>
+                            <div className="text-xs sm:text-sm md:text-base text-gray-400 font-semibold truncate">{d.team}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="points-display text-xl sm:text-2xl md:text-4xl font-black text-white">{d.points}</div>
+                            <div className="text-xs sm:text-sm text-gray-400 font-semibold whitespace-nowrap">{d.wins}W • {d.podiums}P</div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="bg-red-900 bg-opacity-40 border-2 border-f1-red rounded-lg p-4 sm:p-6 text-center card-stagger-5">
+                    <p className="text-base sm:text-xl md:text-2xl font-black text-white leading-snug">
+                      🔥 JUST 1 POINT SEPARATES NORRIS & PIASTRI! 🔥
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'predictions' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="fade-in">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase mb-1 sm:mb-2">Final Predictions</h2>
+                    <p className="text-gray-400 text-base sm:text-lg">ML Model Forecast</p>
+                  </div>
+
+                  {/* Podium for top 3 */}
+                  <Podium data={predicted} type="predicted" />
+
+                  {/* Remaining drivers */}
+                  <div className="space-y-2 sm:space-y-3 mt-8">
+                    {predicted.slice(3).map((d, idx) => (
+                      <div key={d.pos} className={`bg-gray-800 rounded-lg p-3 sm:p-4 md:p-6 card-stagger-${idx + 4}`}>
+                        <div className="flex items-center gap-2 sm:gap-3 md:gap-6">
+                          <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">{medal(d.pos)}</div>
+                          <div className="text-2xl sm:text-3xl md:text-4xl flex-shrink-0">{d.flag}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-black text-base sm:text-lg md:text-2xl text-white uppercase truncate">{d.driver}</div>
+                            <div className="text-xs sm:text-sm md:text-base text-gray-300 font-semibold truncate">{d.team}</div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-xl sm:text-2xl md:text-4xl font-black text-white">{d.final}</div>
+                            <div className="text-xs sm:text-sm md:text-base text-green-400 font-bold whitespace-nowrap">+{d.gain} PTS</div>
+                          </div>
+                        </div>
+                        <div className="mt-2 sm:mt-3 bg-black bg-opacity-30 rounded-full h-1.5 sm:h-2">
+                          <div className="progress-bar h-full rounded-full" style={{ width: `${(d.gain / 116) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-gray-800 border-2 border-yellow-500 rounded-lg p-4 sm:p-6 text-center card-stagger-5">
+                    <div className="flex items-center justify-center gap-2 sm:gap-3 mb-2">
+                      <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-400 flex-shrink-0" />
+                      <p className="text-xl sm:text-2xl md:text-3xl font-black text-white uppercase">Lando Norris</p>
+                    </div>
+                    <p className="text-gray-300 text-sm sm:text-base md:text-lg font-semibold">Final Margin: +31 points over Piastri</p>
+                  </div>
+
+                  {/* Monte Carlo Section */}
+                  <div className="bg-gray-800 rounded-lg overflow-hidden card-stagger-5">
+                    <button
+                      onClick={() => setShowMC(!showMC)}
+                      className="w-full flex items-center justify-between p-4 sm:p-6 hover:bg-gray-700 active:bg-gray-700 transition"
+                    >
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-f1-red flex-shrink-0" />
+                        <h3 className="text-base sm:text-xl md:text-2xl font-black text-white uppercase text-left">Championship Win Probability Simulation</h3>
+                      </div>
+                      {showMC ? <ChevronUp /> : <ChevronDown />}
+                    </button>
+                    
+                    {showMC && (
+                      <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-3 sm:space-y-4 fade-in">
+                        <p className="text-gray-400 font-semibold text-sm sm:text-base">(1,000 simulations)</p>
+                        {mc.map((r, i) => (
+                          <div key={i} className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-white text-sm sm:text-base md:text-lg">{r.driver}</span>
+                              <span className="text-2xl sm:text-3xl font-black text-white">{r.prob}%</span>
+                            </div>
+                            <div className="bg-gray-900 rounded-full h-8 sm:h-10">
+                              <div
+                                className={`${r.color} h-full flex items-center justify-end px-3 sm:px-4 rounded-full transition-all duration-700`}
+                                style={{ width: `${r.prob}%` }}
+                              >
+                                <span className="text-white font-black text-xs sm:text-sm">{r.prob}%</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Key Insights */}
+                  <div className="bg-gray-800 rounded-lg p-4 sm:p-6 card-stagger-5">
+                    <h3 className="text-xl sm:text-2xl font-black text-white uppercase mb-3 sm:mb-4">Key Insights</h3>
+                    <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+                      <div className="stat-badge rounded p-3 sm:p-4">
+                        <div className="flex gap-2 sm:gap-3">
+                          <span className="text-xl sm:text-2xl flex-shrink-0">🏎️</span>
+                          <div>
+                            <p className="font-bold text-white text-xs sm:text-sm uppercase mb-1">McLaren Dominance</p>
+                            <p className="text-gray-300 text-xs sm:text-sm leading-snug">Both drivers predicted on podium all races</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="stat-badge rounded p-3 sm:p-4">
+                        <div className="flex gap-2 sm:gap-3">
+                          <span className="text-xl sm:text-2xl flex-shrink-0">⚔️</span>
+                          <div>
+                            <p className="font-bold text-white text-xs sm:text-sm uppercase mb-1">Internal Battle</p>
+                            <p className="text-gray-300 text-xs sm:text-sm leading-snug">1 point gap - team orders crucial</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="stat-badge rounded p-3 sm:p-4">
+                        <div className="flex gap-2 sm:gap-3">
+                          <span className="text-xl sm:text-2xl flex-shrink-0">📈</span>
+                          <div>
+                            <p className="font-bold text-white text-xs sm:text-sm uppercase mb-1">Model Accuracy</p>
+                            <p className="text-gray-300 text-xs sm:text-sm leading-snug">0.516 MAE - highly reliable predictions</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="stat-badge rounded p-3 sm:p-4">
+                        <div className="flex gap-2 sm:gap-3">
+                          <span className="text-xl sm:text-2xl flex-shrink-0">🌧️</span>
+                          <div>
+                            <p className="font-bold text-white text-xs sm:text-sm uppercase mb-1">Wild Card</p>
+                            <p className="text-gray-300 text-xs sm:text-sm leading-snug">Brazil weather unpredictable factor</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'races' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="fade-in">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white uppercase mb-1 sm:mb-2">Remaining Races</h2>
+                    <p className="text-gray-400 text-base sm:text-lg">4 Rounds • 138 Points Available</p>
+                  </div>
+
+                  <div className="space-y-3 sm:space-y-4">
+                    {races.map((r, idx) => (
+                      <div key={r.round} className={`race-card rounded-lg overflow-hidden card-stagger-${idx + 1}`}>
+                        <button
+                          onClick={() => setExpandedRace(expandedRace === r.round ? null : r.round)}
+                          className="w-full p-4 sm:p-6 text-left"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
+                              <div className="position-badge text-white text-base sm:text-lg md:text-xl font-black w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded flex items-center justify-center flex-shrink-0">
+                                {r.round}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-black text-base sm:text-xl md:text-2xl text-white uppercase truncate">{r.name}</div>
+                                <div className="text-xs sm:text-sm md:text-base text-gray-400 font-semibold truncate">{r.circuit} • {r.date}</div>
+                              </div>
+                              {r.sprint && (
+                                <span className="bg-purple-600 px-2 py-1 rounded text-xs font-bold text-white uppercase flex-shrink-0">
+                                  ⚡ Sprint
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-white flex-shrink-0">
+                              {expandedRace === r.round ? <ChevronUp /> : <ChevronDown />}
+                            </div>
+                          </div>
+                        </button>
+                        
+                        {expandedRace === r.round && (
+                          <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-2 sm:space-y-3 border-t border-gray-700 pt-3 sm:pt-4 fade-in">
+                            <p className="text-gray-400 font-bold uppercase text-xs sm:text-sm">Predicted Top 3</p>
+                            {r.pred.map(p => (
+                              <div key={p.pos} className="bg-gray-900 rounded p-3 sm:p-4 flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-1 min-w-0">
+                                  <span className="text-xl sm:text-2xl flex-shrink-0">{medal(p.pos)}</span>
+                                  <span className="font-bold text-white text-sm sm:text-base md:text-lg truncate">{p.driver}</span>
+                                </div>
+                                <span className="text-green-400 font-black text-sm sm:text-base md:text-lg whitespace-nowrap">+{p.pts} PTS</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-gray-800 mt-8 sm:mt-12">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 text-center text-gray-500">
+              <p className="text-xs sm:text-sm font-semibold mb-2 leading-snug">
+                ⚠️ Statistical prediction based on ML model (2018-2025 F1 data) - actual results may vary.
+              </p><p className="text-xs sm:text-sm font-semibold mb-4 leading-snug">
+                Not affiliated with or endorsed by Formula 1® or the FIA. All trademarks are the property of their respective owners.
+              </p> <p className="text-xs mb-1">Developed by <a href="https://www.linkedin.com/in/sijusaji/" target="_blank" rel="noopener noreferrer" className="text-f1-red font-bold underline">SIJU SAJI</a></p>
+              <p className="text-xs mb-3">Python • XGBoost • FastF1 • React | MAE: 0.516</p>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 text-xs font-semibold">
+                <span className="stat-badge px-2 sm:px-3 py-1 rounded whitespace-nowrap">📊 2,956 races</span>
+                <span className="stat-badge px-2 sm:px-3 py-1 rounded whitespace-nowrap">🎯 21 features</span>
+                <span className="stat-badge px-2 sm:px-3 py-1 rounded whitespace-nowrap">🤖 XGBoost</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<F1App />);
+  </script>
+</body>
+
+</html>
