@@ -186,9 +186,6 @@ Contributions welcome! Areas for improvement:
 - Include practice/FP session data
 - Add sprint race predictions
 
-## 📄 License
-
-MIT License - feel free to use for personal/educational purposes
 
 ## 🙏 Acknowledgments
 
